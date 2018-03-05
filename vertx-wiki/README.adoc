@@ -1,0 +1,22 @@
+= Vert.x Wiki
+
+
+== Running the project
+
+Once you have retrieved the project, you can check that everything works with:
+
+[source]
+----
+mvn test exec:java
+----
+
+The command compiles the project and runs the tests, then  it launches the application, so you can check by yourself. Open your browser to http://localhost:8080. You should see a _Hello World_ message.
+
+== Building the project
+To build the project, just use:
+
+----
+mvn clean package
+----
+
+It generates a _fat-jar_ in the `target` directory.
