@@ -1,9 +1,11 @@
 package io.vertx.starter;
 
+import com.github.rjeschke.txtmark.Processor;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -13,11 +15,16 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.templ.FreeMarkerTemplateEngine;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class MainVerticle extends AbstractVerticle {
 
+  private static final String EMPTY_PAGE_MARKDOWN =
+    "# A new page\n" +
+      "\n" +
+      "Feel-free to write in Markdown!\n";
   private static Vertx vertx;
   private JDBCClient dbClient;
 
@@ -69,6 +76,8 @@ public class MainVerticle extends AbstractVerticle {
     HttpServer server = vertx.createHttpServer();
     Router router = Router.router(vertx);
     router.get("/").handler(this::indexHandler);
+    router.get("/wiki/:page").handler(this::pageRenderHandler);
+    router.post("/create").handler(this::pageCreateHandler);
 
     router.post().handler(BodyHandler.create());
 
@@ -120,5 +129,54 @@ public class MainVerticle extends AbstractVerticle {
         context.fail(car.cause());
       }
     });
+  }
+
+
+  private void pageRenderHandler(RoutingContext ctx) {
+    String page = ctx.request().getParam("page");
+    dbClient.getConnection(car -> {
+      if (car.succeeded()) {
+        SQLConnection conn = car.result();
+        conn.queryWithParams(DBStatement.SQL_GET_PAGE, new JsonArray().add(page), fetch -> {
+          conn.close();
+          if (fetch.succeeded()) {
+            JsonArray row = fetch.result().getResults()
+              .stream()
+              .findFirst().orElseGet(() -> new JsonArray().add(-1).add(EMPTY_PAGE_MARKDOWN));
+            Integer id = row.getInteger(0);
+            String rawContent = row.getString(1);
+            context.put("title", page);
+            context.put("id", id);
+            context.put("newPage", fetch.result().getResults().size() == 0 ? "yes" : "no");
+            context.put("rawContent", rawContent);
+            context.put("content", Processor.process(rawContent));
+            context.put("timestamp", new Date().toString());
+            templateEngine.render(ctx, "templates", "/page.ftl", ar -> {
+              if (ar.succeeded()) {
+                ctx.response().putHeader("Content-Type", "text/html");
+                ctx.response().end(ar.result());
+              } else {
+                ctx.fail(ar.cause());
+              }
+            });
+          } else {
+            ctx.fail(car.cause());
+          }
+        });
+      } else {
+        ctx.fail(car.cause());
+      }
+    });
+  }
+
+  private void pageCreateHandler(RoutingContext ctx) {
+    String pageName = ctx.request().getParam("name");
+    String location = "/wiki/" + pageName;
+    if (pageName == null || pageName.isEmpty()) {
+      location = "/";
+    }
+    ctx.response().setStatusCode(303);
+    ctx.response().putHeader("Location", location);
+    ctx.response().end();
   }
 }
