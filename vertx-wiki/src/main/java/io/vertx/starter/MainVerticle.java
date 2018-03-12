@@ -77,7 +77,9 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.get("/").handler(this::indexHandler);
     router.get("/wiki/:page").handler(this::pageRenderHandler);
+    router.post("/save").handler(this::pageUpdateHandler);
     router.post("/create").handler(this::pageCreateHandler);
+    router.post("/delete").handler(this::pageDeleteHandler);
 
     router.post().handler(BodyHandler.create());
 
@@ -93,6 +95,38 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
     return future;
+  }
+
+  private void pageUpdateHandler(RoutingContext ctx) {
+    String id = ctx.request().getParam("id");
+    String title = ctx.request().getParam("title");
+    String mdContent = ctx.request().getParam("markdown");
+    boolean newPage = "yes".equals(ctx.request().getParam("newPage"));
+
+    dbClient.getConnection(car -> {
+      if (car.succeeded()) {
+        SQLConnection conn = car.result();
+        String sql = newPage ? DBStatement.SQL_CREATE_PAGE : DBStatement.SQL_SAVE_PAGE;
+        JsonArray params = new JsonArray();
+        if (newPage) {
+          params.add(title).add(mdContent);
+        } else {
+          params.add(mdContent).add(id);
+        }
+        conn.updateWithParams(sql, params, res -> {
+          conn.close();
+          if (res.succeeded()) {
+            ctx.response().setStatusCode(303);
+            ctx.response().putHeader("Location", "/wiki/" + title);
+            ctx.response().end();
+          } else {
+            ctx.fail(res.cause());
+          }
+        });
+      } else {
+        ctx.fail(car.cause());
+      }
+    });
   }
 
   private void indexHandler(RoutingContext context) {
@@ -178,5 +212,26 @@ public class MainVerticle extends AbstractVerticle {
     ctx.response().setStatusCode(303);
     ctx.response().putHeader("Location", location);
     ctx.response().end();
+  }
+
+  private void pageDeleteHandler(RoutingContext ctx) {
+    String id = ctx.request().getParam("id");
+    dbClient.getConnection(car -> {
+      if (car.succeeded()) {
+        SQLConnection conn = car.result();
+        conn.updateWithParams(DBStatement.SQL_DELETE_PAGE, new JsonArray().add(id), res -> {
+          if (res.succeeded()) {
+            conn.close();
+            ctx.response().setStatusCode(303);
+            ctx.response().putHeader("Location", "/");
+            ctx.response().end();
+          } else {
+            ctx.fail(car.cause());
+          }
+        });
+      } else {
+        ctx.fail(car.cause());
+      }
+    });
   }
 }
