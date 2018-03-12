@@ -1,4 +1,4 @@
-<#include "footer.ftl">
+<#include "header.ftl">
 
 <div class="row">
   <div class="col-md-12 mt-1">
@@ -9,7 +9,7 @@
       </span>
     <h1 class="display-4">
       <span class="text-muted">{</span>
-    ${context.title}
+          ${context.title}
       <span class="text-muted">}</span>
     </h1>
   </div>
@@ -18,7 +18,7 @@
   ${context.content}
   </div>
 
-  <div class="col-md-12 collapsable collapse clearfix" id="editor">
+  <div class="col-md-12 collapsable clearfix" id="editor">
     <form action="/save" method="post">
       <div class="form-group">
         <input type="hidden" name="id" value="${context.id}">

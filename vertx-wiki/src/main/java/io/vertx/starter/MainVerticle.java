@@ -37,7 +37,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   @Override
-  public void start(Future<Void> startFuture) throws Exception {
+  public void start(Future<Void> startFuture) {
     Future<Void> steps = prepareDatabase().compose(v -> startHttpServer());
     steps.setHandler(startFuture.completer());
   }
@@ -77,6 +77,8 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.get("/").handler(this::indexHandler);
     router.get("/wiki/:page").handler(this::pageRenderHandler);
+
+    router.post().handler(BodyHandler.create());
     router.post("/save").handler(this::pageUpdateHandler);
     router.post("/create").handler(this::pageCreateHandler);
     router.post("/delete").handler(this::pageDeleteHandler);
@@ -179,12 +181,12 @@ public class MainVerticle extends AbstractVerticle {
               .findFirst().orElseGet(() -> new JsonArray().add(-1).add(EMPTY_PAGE_MARKDOWN));
             Integer id = row.getInteger(0);
             String rawContent = row.getString(1);
-            context.put("title", page);
-            context.put("id", id);
-            context.put("newPage", fetch.result().getResults().size() == 0 ? "yes" : "no");
-            context.put("rawContent", rawContent);
-            context.put("content", Processor.process(rawContent));
-            context.put("timestamp", new Date().toString());
+            ctx.put("title", page);
+            ctx.put("id", id);
+            ctx.put("newPage", fetch.result().getResults().size() == 0 ? "yes" : "no");
+            ctx.put("rawContent", rawContent);
+            ctx.put("content", Processor.process(rawContent));
+            ctx.put("timestamp", new Date().toString());
             templateEngine.render(ctx, "templates", "/page.ftl", ar -> {
               if (ar.succeeded()) {
                 ctx.response().putHeader("Content-Type", "text/html");
