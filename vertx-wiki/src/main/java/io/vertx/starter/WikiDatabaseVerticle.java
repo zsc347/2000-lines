@@ -4,16 +4,21 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.jdbc.JDBCClient;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class WikiDatabaseVerticle extends AbstractVerticle {
 
@@ -124,18 +129,88 @@ public class WikiDatabaseVerticle extends AbstractVerticle {
   }
 
   private void deletePage(Message<JsonObject> message) {
+    JsonArray data = new JsonArray()
+      .add(message.body().getString("id"));
+    dbClient.queryWithParams(sqlQueries.get(SqlQuery.DELETE_PAGE), data, delete -> {
+      if (delete.succeeded()) {
+        message.reply("ok");
+      } else {
+        reportQueryError(message, delete.cause());
+      }
+    });
   }
 
   private void savePage(Message<JsonObject> message) {
+    JsonObject request = message.body();
+    JsonArray data = new JsonArray()
+      .add(request.getString("markdown"))
+      .add(request.getString("id"));
+
+    dbClient.updateWithParams(sqlQueries.get(SqlQuery.SAVE_PAGE), data, update -> {
+      if (update.succeeded()) {
+        message.reply("ok");
+      } else {
+        reportQueryError(message, update.cause());
+      }
+    });
   }
 
   private void createPage(Message<JsonObject> message) {
+    JsonObject request = message.body();
+    JsonArray data = new JsonArray()
+      .add(request.getString("title"))
+      .add(request.getString("markdown"));
+
+    dbClient.updateWithParams(sqlQueries.get(SqlQuery.CREATE_PAGE), data, create -> {
+      if (create.succeeded()) {
+        message.reply("pk");
+      } else {
+        reportQueryError(message, create.cause());
+      }
+    });
+
   }
 
   private void fetchPage(Message<JsonObject> message) {
+    String requestPage = message.body().getString("page");
+    JsonArray params = new JsonArray().add(requestPage);
+    dbClient.queryWithParams(sqlQueries.get(SqlQuery.GET_PAGE), params, fetch -> {
+      if (fetch.succeeded()) {
+        JsonObject response = new JsonObject();
+        ResultSet resultSet = fetch.result();
+        if (resultSet.getNumRows() == 0) {
+          response.put("found", false);
+        } else {
+          response.put("found", true);
+          JsonArray row = resultSet.getResults().get(0);
+          response.put("id", row.getInteger(0));
+          response.put("rawContent", row.getString(1));
+        }
+        message.reply(response);
+      } else {
+        reportQueryError(message, fetch.cause());
+      }
+    });
   }
 
   private void fetchAllPages(Message<JsonObject> message) {
+    dbClient.query(sqlQueries.get(SqlQuery.ALL_PAGES), res -> {
+      if (res.succeeded()) {
+        List<String> pages = res.result()
+          .getResults()
+          .stream()
+          .map(json -> json.getString(0))
+          .sorted()
+          .collect(Collectors.toList());
+        message.reply(new JsonObject().put("pages", pages));
+      } else {
+        reportQueryError(message, res.cause());
+      }
+    });
+  }
+
+  private void reportQueryError(Message<JsonObject> message, Throwable cause) {
+
   }
 
 }
