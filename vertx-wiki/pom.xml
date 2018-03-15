@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -11,7 +11,7 @@
 
   <properties>
     <vertx.version>3.5.1</vertx.version>
-    <main.verticle>io.vertx.starter.MainVerticle</main.verticle>
+    <main.verticle>io.vertx.guides.wiki.MainVerticle</main.verticle>
   </properties>
 
   <dependencyManagement>
@@ -58,6 +58,15 @@
       <artifactId>logback-classic</artifactId>
       <version>1.2.3</version>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-service-proxy</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-codegen</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -99,22 +108,56 @@
             </goals>
             <configuration>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>io.vertx.core.Launcher</Main-Class>
                     <Main-Verticle>${main.verticle}</Main-Verticle>
                   </manifestEntries>
                 </transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                   <resource>META-INF/services/io.vertx.core.spi.VerticleFactory</resource>
                 </transformer>
               </transformers>
               <artifactSet>
               </artifactSet>
-              <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-fat.jar</outputFile>
+              <outputFile>
+                ${project.build.directory}/${project.artifactId}-${project.version}-fat.jar
+              </outputFile>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <useIncrementalCompilation>false</useIncrementalCompilation>
+
+          <annotationProcessors>
+            <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
+          </annotationProcessors>
+          <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
+          <compilerArgs>
+            <arg>-AoutputDirectory=${project.basedir}/src/main</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${project.basedir}/src/main/generated</directory>
+            </fileset>
+          </filesets>
+        </configuration>
       </plugin>
 
       <plugin>
