@@ -2,14 +2,8 @@ package io.vertx.guides.wiki.database;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.serviceproxy.ProxyHandler;
-import io.vertx.serviceproxy.ProxyHelper;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -26,32 +20,7 @@ public class WikiDatabaseVerticle extends AbstractVerticle {
 
   public static final String CONFIG_WIKIDB_QUEUE = "wikidb.queue";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(WikiDatabaseVerticle.class);
   private JDBCClient dbClient;
-
-
-  private HashMap<SqlQuery, String> loadSqlQueries() throws IOException {
-    String queriesFile = config().getString(CONFIG_WIKIDB_SQL_QUERIES_RESOURCE_FILE);
-    InputStream queriesInputStream;
-    if (queriesFile != null) {
-      queriesInputStream = new FileInputStream(queriesFile);
-    } else {
-      queriesInputStream = getClass().getResourceAsStream("/db-queries.properties");
-    }
-
-    Properties queriesProps = new Properties();
-    queriesProps.load(queriesInputStream);
-    queriesInputStream.close();
-
-    HashMap<SqlQuery, String> sqlQueries = new HashMap<>();
-    sqlQueries.put(SqlQuery.CREATE_PAGES_TABLE, queriesProps.getProperty("create-pages-table"));
-    sqlQueries.put(SqlQuery.ALL_PAGES, queriesProps.getProperty("all-pages"));
-    sqlQueries.put(SqlQuery.GET_PAGE, queriesProps.getProperty("get-page"));
-    sqlQueries.put(SqlQuery.CREATE_PAGE, queriesProps.getProperty("create-page"));
-    sqlQueries.put(SqlQuery.SAVE_PAGE, queriesProps.getProperty("save-page"));
-    sqlQueries.put(SqlQuery.DELETE_PAGE, queriesProps.getProperty("delete-page"));
-    return sqlQueries;
-  }
 
   public void start(Future<Void> startFuture) throws Exception {
     HashMap<SqlQuery, String> sqlQueries = loadSqlQueries();
@@ -78,64 +47,27 @@ public class WikiDatabaseVerticle extends AbstractVerticle {
     });
   }
 
-  public enum ErrorCodes {
-    NO_ACTION_SPECIFIED,
-    BAD_ACTION,
-    DB_ERROR
-  }
-
-  private void onMessage(Message<JsonObject> message) {
-    if (!message.headers().contains("action")) {
-      LOGGER.error("No action specified with headers {}, body {}", message.headers(),
-        message.body().encodePrettily());
-      message.fail(ErrorCodes.NO_ACTION_SPECIFIED.ordinal(), "No action header specified");
-      return;
-    }
-    String action = message.headers().get("action");
-    switch (action) {
-      case "all-pages":
-        fetchAllPages(message);
-        break;
-      case "get-page":
-        fetchPage(message);
-        break;
-      case "create-page":
-        createPage(message);
-        break;
-      case "save-page":
-        savePage(message);
-        break;
-      case "delete-page":
-        deletePage(message);
-        break;
-      default:
-        message.fail(ErrorCodes.BAD_ACTION.ordinal(), "Bad action: " + action);
+  private HashMap<SqlQuery, String> loadSqlQueries() throws IOException {
+    String queriesFile = config().getString(CONFIG_WIKIDB_SQL_QUERIES_RESOURCE_FILE);
+    InputStream queriesInputStream;
+    if (queriesFile != null) {
+      queriesInputStream = new FileInputStream(queriesFile);
+    } else {
+      queriesInputStream = getClass().getResourceAsStream("/db-queries.properties");
     }
 
-  }
+    Properties queriesProps = new Properties();
+    queriesProps.load(queriesInputStream);
+    queriesInputStream.close();
 
-  private void deletePage(Message<JsonObject> message) {
-
-  }
-
-  private void savePage(Message<JsonObject> message) {
-
-  }
-
-  private void createPage(Message<JsonObject> message) {
-
-  }
-
-  private void fetchPage(Message<JsonObject> message) {
-
-  }
-
-  private void fetchAllPages(Message<JsonObject> message) {
-
-  }
-
-  private void reportQueryError(Message<JsonObject> message, Throwable cause) {
-
+    HashMap<SqlQuery, String> sqlQueries = new HashMap<>();
+    sqlQueries.put(SqlQuery.CREATE_PAGES_TABLE, queriesProps.getProperty("create-pages-table"));
+    sqlQueries.put(SqlQuery.ALL_PAGES, queriesProps.getProperty("all-pages"));
+    sqlQueries.put(SqlQuery.GET_PAGE, queriesProps.getProperty("get-page"));
+    sqlQueries.put(SqlQuery.CREATE_PAGE, queriesProps.getProperty("create-page"));
+    sqlQueries.put(SqlQuery.SAVE_PAGE, queriesProps.getProperty("save-page"));
+    sqlQueries.put(SqlQuery.DELETE_PAGE, queriesProps.getProperty("delete-page"));
+    return sqlQueries;
   }
 
 }

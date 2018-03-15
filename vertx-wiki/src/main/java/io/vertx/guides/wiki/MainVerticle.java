@@ -4,7 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.guides.wiki.database.HttpServerVerticle;
+import io.vertx.guides.wiki.http.HttpServerVerticle;
 import io.vertx.guides.wiki.database.WikiDatabaseVerticle;
 
 public class MainVerticle extends AbstractVerticle {

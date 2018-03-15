@@ -1,4 +1,4 @@
-package io.vertx.guides.wiki.database;
+package io.vertx.guides.wiki.http;
 
 import com.github.rjeschke.txtmark.Processor;
 import io.vertx.core.AbstractVerticle;
@@ -13,6 +13,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.templ.FreeMarkerTemplateEngine;
+import io.vertx.guides.wiki.database.WikiDatabaseService;
 import java.util.Date;
 
 public class HttpServerVerticle extends AbstractVerticle {
@@ -25,6 +26,7 @@ public class HttpServerVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerVerticle.class);
 
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
+
   public static final String CONFIG_WIKIDB_QUEUE = "wikidb.queue";
 
   private String wikiDbQueue = "wikidb.queue";
@@ -34,7 +36,7 @@ public class HttpServerVerticle extends AbstractVerticle {
   private final FreeMarkerTemplateEngine templateEngine = FreeMarkerTemplateEngine.create();
 
   @Override
-  public void start(Future<Void> startFuture) throws Exception {
+  public void start(Future<Void> startFuture) {
 
     wikiDbQueue = config().getString(CONFIG_WIKIDB_QUEUE, "wikidb.queue");
 

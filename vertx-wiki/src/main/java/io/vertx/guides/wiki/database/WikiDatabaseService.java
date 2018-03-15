@@ -39,4 +39,5 @@ public interface WikiDatabaseService {
   static WikiDatabaseService createProxy(Vertx vertx, String wikiDbQueue) {
     return new WikiDatabaseServiceVertxEBProxy(vertx, wikiDbQueue);
   }
+
 }
