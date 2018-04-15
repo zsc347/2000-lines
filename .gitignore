@@ -2,3 +2,7 @@ db/
 .vertx/
 .idea/
 *.iml
+.classpath
+.project
+.settings/
+*.class
