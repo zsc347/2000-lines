@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>t-classloader</groupId>
-  <artifactId>classloader</artifactId>
+  <artifactId>hot-swap-class-loader</artifactId>
   <version>1.0-SNAPSHOT</version>
   <build>
     <plugins>
