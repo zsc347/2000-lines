@@ -11,7 +11,7 @@ public class DynamicLoader extends ClassLoader {
       .getProperty("dynamic", "target/classes");
 
   @Override
-  public Class<?> loadClass(String name) throws ClassNotFoundException {
+  public Class<?> findClass(String name) throws ClassNotFoundException {
     if (name.endsWith("Impl")) {
       byte[] classData = getClassData(name);
       if (classData != null) {
@@ -21,6 +21,21 @@ public class DynamicLoader extends ClassLoader {
       }
     }
     return DynamicLoader.class.getClassLoader().loadClass(name);
+  }
+
+  public Class<?> loadClass(String name, boolean resolve)
+      throws ClassNotFoundException {
+    synchronized (getClassLoadingLock(name)) {
+      // First, check if the class has already been loaded
+      Class<?> c = findLoadedClass(name);
+      if (c == null) {
+        c = findClass(name);
+      }
+      if (resolve) {
+        resolveClass(c);
+      }
+      return c;
+    }
   }
 
 
