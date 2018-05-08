@@ -1,4 +1,4 @@
-package com.scaiz.netty.example.server.handler;
+package com.scaiz.netty.example.echo.server.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

@@ -1,6 +1,6 @@
-package com.scaiz.netty.example.server;
+package com.scaiz.netty.example.echo.server;
 
-import com.scaiz.netty.example.server.handler.EchoServerHandler;
+import com.scaiz.netty.example.echo.server.handler.EchoServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
