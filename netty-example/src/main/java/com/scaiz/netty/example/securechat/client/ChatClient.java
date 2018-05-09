@@ -16,7 +16,7 @@ public class ChatClient {
 
   static final String HOST = System.getProperty("host", "127.0.0.1");
   static final int PORT = Integer
-      .parseInt(System.getProperty("port, 8082"));
+      .parseInt(System.getProperty("port", "8092"));
 
   private void start() throws Exception {
     final SslContext sslContext = SslContextBuilder.forClient()
