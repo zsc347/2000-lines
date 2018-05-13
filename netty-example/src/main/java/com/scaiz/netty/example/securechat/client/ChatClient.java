@@ -16,7 +16,7 @@ public class ChatClient {
 
   static final String HOST = System.getProperty("host", "127.0.0.1");
   static final int PORT = Integer
-      .parseInt(System.getProperty("port", "8092"));
+      .parseInt(System.getProperty("port", "8086"));
 
   private void start() throws Exception {
     final SslContext sslContext = SslContextBuilder.forClient()
@@ -38,6 +38,7 @@ public class ChatClient {
         if (line == null) {
           break;
         }
+        System.out.println("client send " + line);
         lastWriteFuture = ch.writeAndFlush(line + "\r\n");
         if ("bye".equals(line.toLowerCase())) {
           ch.closeFuture().sync();
