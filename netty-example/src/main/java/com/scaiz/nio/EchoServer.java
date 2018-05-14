@@ -1,6 +1,5 @@
 package com.scaiz.nio;
 
-import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -15,20 +14,24 @@ public class EchoServer {
 
   static int PORT = Integer.parseInt(System.getProperty("port", "8086"));
 
+  public static void main(String[] args) throws Exception {
+    new EchoServer().start();
+  }
 
-  public void start() throws Exception {
+  private void start() throws Exception {
     ServerSocketChannel serverChannel = ServerSocketChannel.open();
     serverChannel.configureBlocking(false);
     serverChannel.socket().bind(new InetSocketAddress(PORT));
     Selector selector = Selector.open();
     serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+    new Thread(new ChannelHandler(selector)).start();
   }
 
-  private class ChannelHanlder implements Runnable {
+  private class ChannelHandler implements Runnable {
 
     private Selector selector;
 
-    ChannelHanlder(Selector selector) {
+    ChannelHandler(Selector selector) {
       this.selector = selector;
     }
 
@@ -43,10 +46,18 @@ public class EchoServer {
         }
         if (selectionKey.isReadable()) {
           SocketChannel client = (SocketChannel) selectionKey.channel();
-          ByteBuffer buffer = ByteBuffer.allocate(1024);
-          int count = client.read(buffer);
+          ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+          ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
+
+          int count = client.read(readBuffer);
           if (count > 0) {
-            buffer.flip();
+            readBuffer.flip();
+            byte[] bytes = new byte[readBuffer.remaining()];
+            readBuffer.get(bytes);
+            String body = new String(bytes, "utf-8");
+            System.out.println("server received: " + body);
+            writeBuffer.put(bytes);
+            client.write(readBuffer);
           }
         }
       }
