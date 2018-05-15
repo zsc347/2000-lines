@@ -46,18 +46,20 @@ public class EchoServer {
         }
         if (selectionKey.isReadable()) {
           SocketChannel client = (SocketChannel) selectionKey.channel();
-          ByteBuffer readBuffer = ByteBuffer.allocate(1024);
-          ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
+          ByteBuffer buffer = ByteBuffer.allocate(64);
 
-          int count = client.read(readBuffer);
+          int count = client.read(buffer);
+
           if (count > 0) {
-            readBuffer.flip();
-            byte[] bytes = new byte[readBuffer.remaining()];
-            readBuffer.get(bytes);
+            buffer.flip();
+            byte[] bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
             String body = new String(bytes, "utf-8");
+            // only read 64 bytes one time
             System.out.println("server received: " + body);
-            writeBuffer.put(bytes);
-            client.write(readBuffer);
+            buffer.rewind();
+            client.write(buffer);
+            buffer.clear();
           }
         }
       }
