@@ -49,8 +49,7 @@ public class EchoServer {
           ByteBuffer buffer = ByteBuffer.allocate(64);
 
           int count = client.read(buffer);
-
-          if (count > 0) {
+          while (count > 0) {
             buffer.flip();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
@@ -58,9 +57,13 @@ public class EchoServer {
             // only read 64 bytes one time
             System.out.println("server received: " + body);
             buffer.rewind();
-            client.write(buffer);
+            while (buffer.hasRemaining()) {
+              client.write(buffer);
+            }
             buffer.clear();
+            count = client.read(buffer);
           }
+          buffer.clear();
         }
       }
     }
