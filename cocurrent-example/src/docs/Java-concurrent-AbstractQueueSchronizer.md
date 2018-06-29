@@ -1,4 +1,4 @@
-AbstractQueueSchronizer 源码解析
+AbstractQueueSynchronizer 源码解析
 
 AQS(AbstractQueueSchronizer)是Jdk源码中构建锁或同步装置的基础框架。
 Java并发锁中，ReentrantLock, ReentrantReadWriteLock, CountdownLatch，Semaphore等经典同步工具
