@@ -39,11 +39,11 @@ ForkJoin框架的核心在于提供轻量级调度机制。它的基本调度策
 
 可以通过ForkJoin计算Fibonacci的例子来学习ForkJoin并行框架的使用
 ````
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
+import java.util.scaiz.concurrent.ForkJoinPool;
+import java.util.scaiz.concurrent.RecursiveTask;
 import org.junit.Test;
 
-public class ForkJoinFibonacciTest {
+public class concurrent.ForkJoinFibonacciTest {
 
   static final long[] FIBONACCI = {1, 1, 2, 3, 5, 8, 13, 21};
 
