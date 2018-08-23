@@ -1,4 +1,4 @@
-package com.scaiz.zk.example;
+package com.scaiz.zk.example.watcher;
 
 import org.apache.zookeeper.KeeperException.Code;
 

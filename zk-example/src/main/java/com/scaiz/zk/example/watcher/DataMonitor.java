@@ -1,6 +1,7 @@
-package com.scaiz.zk.example;
+package com.scaiz.zk.example.watcher;
 
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.AsyncCallback.StatCallback;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.Code;
@@ -10,21 +11,21 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 
+
+@Slf4j
 public class DataMonitor implements Watcher, StatCallback {
 
   private ZooKeeper zk;
   private String znode;
-  private Watcher chainedWatcher;
   private boolean dead;
   private DataMonitorListener listener;
   private byte prevData[];
 
 
-  public DataMonitor(ZooKeeper zk, String znode, Watcher chainedWatcher,
+  public DataMonitor(ZooKeeper zk, String znode,
       DataMonitorListener listener) {
     this.zk = zk;
     this.znode = znode;
-    this.chainedWatcher = chainedWatcher;
     this.listener = listener;
     zk.exists(znode, true, this, null);
   }
@@ -33,7 +34,11 @@ public class DataMonitor implements Watcher, StatCallback {
     return dead;
   }
 
+  /**
+   * Watcher callback
+   */
   public void process(WatchedEvent event) {
+    log.info("event {}", event);
     String path = event.getPath();
     if (event.getType() == EventType.None) {
       switch (event.getState()) {
@@ -49,16 +54,14 @@ public class DataMonitor implements Watcher, StatCallback {
         zk.exists(znode, true, this, null);
       }
     }
-    if (chainedWatcher != null) {
-      chainedWatcher.process(event);
-    }
-
-    if (chainedWatcher != null) {
-      chainedWatcher.process(event);
-    }
   }
 
-  public void processResult(Code rc, String path, Object ctx, Stat stat) {
+  /**
+   * StatCallback callback
+   */
+  public void processResult(int i, String path, Object ctx, Stat stat) {
+    Code rc = Code.get(i);
+    log.info("process result, code {}, path {}, ctx {}, stat {}", rc, path, ctx, stat);
     boolean exists = false;
     switch (rc) {
       case OK:
@@ -91,9 +94,5 @@ public class DataMonitor implements Watcher, StatCallback {
       listener.exists(b);
       prevData = b;
     }
-  }
-
-  public void processResult(int i, String s, Object ctx, Stat stat) {
-    processResult(Code.get(i), s, ctx, stat);
   }
 }
