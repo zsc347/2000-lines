@@ -30,10 +30,6 @@ public class DataMonitor implements Watcher, StatCallback {
     zk.exists(znode, true, this, null);
   }
 
-  public boolean isDead() {
-    return dead;
-  }
-
   /**
    * Watcher callback
    */
@@ -54,6 +50,10 @@ public class DataMonitor implements Watcher, StatCallback {
         zk.exists(znode, true, this, null);
       }
     }
+  }
+
+  public boolean isDead() {
+    return dead;
   }
 
   /**

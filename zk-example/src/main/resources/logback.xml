@@ -28,7 +28,8 @@
   </appender>
 
 
-  <logger name="org.apache.zookeeper" level="INFO"/>
+  <logger name="org.apache.zookeeper" level="WARN"/>
+  <logger name="ch.qos.logback.classic" level="WARN"/>
 
   <root level="debug">
     <level value="debug" />
