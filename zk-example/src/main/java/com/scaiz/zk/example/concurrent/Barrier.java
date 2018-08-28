@@ -1,9 +1,8 @@
-package concurrent;
+package com.scaiz.zk.example.concurrent;
 
 import env.Config;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.CreateMode;

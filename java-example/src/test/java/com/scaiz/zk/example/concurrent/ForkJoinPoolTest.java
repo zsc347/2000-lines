@@ -1,4 +1,4 @@
-package concurrent;
+package com.scaiz.zk.example.concurrent;
 
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;

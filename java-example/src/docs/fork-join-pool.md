@@ -43,7 +43,7 @@ import java.util.scaiz.concurrent.ForkJoinPool;
 import java.util.scaiz.concurrent.RecursiveTask;
 import org.junit.Test;
 
-public class concurrent.ForkJoinFibonacciTest {
+public class ForkJoinFibonacciTest {
 
   static final long[] FIBONACCI = {1, 1, 2, 3, 5, 8, 13, 21};
 

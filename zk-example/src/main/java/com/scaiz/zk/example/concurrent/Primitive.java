@@ -1,4 +1,4 @@
-package concurrent;
+package com.scaiz.zk.example.concurrent;
 
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
