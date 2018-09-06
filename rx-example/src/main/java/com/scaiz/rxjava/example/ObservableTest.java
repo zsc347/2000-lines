@@ -1,14 +1,13 @@
 package com.scaiz.rxjava.example;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.functions.Consumer;
+import io.reactivex.internal.operators.observable.ObserverResourceWrapper;
+import io.reactivex.schedulers.Schedulers;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -107,9 +106,9 @@ public class ObservableTest {
 
     Observable<Integer> observable1 = Observable.create(
         (ObservableOnSubscribe<Integer>) emitter -> {
-            for (int i = 0; ; i++) {
-              emitter.onNext(i);
-            }
+          for (int i = 0; ; i++) {
+            emitter.onNext(i);
+          }
         }).subscribeOn(Schedulers.io());
 
     Observable<String> observable2 = Observable.create(
@@ -128,23 +127,65 @@ public class ObservableTest {
   }
 
 
-  public static void testNoBp2() {
-    Observable.create((ObservableOnSubscribe<Integer>)emitter -> {
+  private static void testNoBp2() {
+    Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
       for (int i = 0; ; i++) {
         emitter.onNext(i);
       }
     }).observeOn(Schedulers.newThread())
         .subscribe(i -> {
-      TimeUnit.SECONDS.sleep(1);
-      System.out.println("consume " + i);
-    });
+          TimeUnit.SECONDS.sleep(1);
+          System.out.println("consume " + i);
+        });
   }
 
+
+  private static void testFlowControl() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    Scheduler mainThread = Schedulers.io();
+    Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+      for (int i = 0; ; i++) {
+        emitter.onNext(i);
+        TimeUnit.SECONDS.sleep(1);
+      }
+    })
+        .subscribeOn(Schedulers.io())
+        .observeOn(mainThread)
+        .subscribe(integer -> {
+          System.out.println("consume " + integer);
+        });
+    latch.await();
+  }
+
+  private static void testFlowControl2() throws InterruptedException {
+
+    CountDownLatch latch = new CountDownLatch(1);
+    Scheduler mainThread = Schedulers.io();
+
+    Observable<Integer> observable = Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+      for (int i = 0; ; i++) {
+        emitter.onNext(1);
+      }
+    }).subscribeOn(Schedulers.io())
+        .sample(2, TimeUnit.SECONDS);
+
+    Observable<String> observable2 = Observable.create((ObservableOnSubscribe<String>) emitter -> {
+      emitter.onNext("A");
+    }).subscribeOn(Schedulers.io());
+
+    Observable.zip(observable, observable2, (integer, s) -> integer + s)
+        .observeOn(mainThread)
+        .subscribe(s -> System.out.println("consume " + s),
+            Throwable::printStackTrace);
+    latch.await();
+  }
 
   public static void main(String[] args) throws Exception {
     // testOb2();
     // testThread();
     // testBackpressure();
-    testNoBp2();
+    // testNoBp2();
+    // testFlowControl();
+    testFlowControl2();
   }
 }
