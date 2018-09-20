@@ -1,6 +1,7 @@
 package com.scaiz.rxjava.example;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.Scheduler;
@@ -180,12 +181,33 @@ public class ObservableTest {
     latch.await();
   }
 
+
+  private static void testBp() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    Scheduler mainThread = Schedulers.newThread();
+
+    Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+      for (int i = 0; ; i++) {
+        emitter.onNext(i);
+      }
+    })
+        .subscribeOn(Schedulers.io())
+        .sample(10, TimeUnit.SECONDS)
+        .observeOn(mainThread)
+        .subscribe(System.out::println);
+    latch.await();
+  }
+
+
+
   public static void main(String[] args) throws Exception {
     // testOb2();
     // testThread();
     // testBackpressure();
     // testNoBp2();
     // testFlowControl();
-    testFlowControl2();
+    // testFlowControl2();
+    testBp();
+
   }
 }
