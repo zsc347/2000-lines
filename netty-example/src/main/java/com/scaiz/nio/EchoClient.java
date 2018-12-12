@@ -16,7 +16,7 @@ public class EchoClient {
   private static final String HOST =
       System.getProperty("host", "127.0.0.1");
   private static final int PORT = Integer
-      .parseInt(System.getProperty("port", "8086"));
+      .parseInt(System.getProperty("port", "8000"));
 
   private void start() throws Exception {
     SocketChannel socketChannel = SocketChannel.open();
@@ -105,12 +105,12 @@ public class EchoClient {
         BufferedReader sysIn = new BufferedReader(
             new InputStreamReader(System.in));
         try {
-          String cmd = sysIn.readLine();
+          String cmd = sysIn.readLine() + '\n';
           ByteBuffer buffer = ByteBuffer.allocate(1024);
           buffer.put(cmd.getBytes(Charset.forName("utf-8")));
           buffer.flip();
           socketChannel.write(buffer);
-          System.out.println("client send: " + cmd);
+          System.out.print("client send: " + cmd);
           buffer.clear();
         } catch (Exception e) {
           e.printStackTrace();

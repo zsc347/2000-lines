@@ -27,6 +27,7 @@ public final class EchoClient {
     if (SSL) {
       sslCtx = SslContextBuilder.forClient()
           .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+
     } else {
       sslCtx = null;
     }

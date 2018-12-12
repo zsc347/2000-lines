@@ -3,7 +3,6 @@ package scaiz.pattern;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -151,8 +150,5 @@ public class ReactorPattern {
       } while (handle != null);
 
     }).start();
-
-
   }
-
 }
