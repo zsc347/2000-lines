@@ -54,6 +54,7 @@ func handleConn(conn *net.TCPConn) {
 	record := make([]byte, 0)
 	for {
 		n, err := conn.Read(buffer)
+		fmt.Println(n)
 		if err != nil {
 			if err == io.EOF {
 				goto exit

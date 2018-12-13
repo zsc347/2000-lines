@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"sync/atomic"
 )
 
 func main() {
@@ -15,48 +16,82 @@ func main() {
 		log.Fatalf("connect failed: %s", err.Error())
 	}
 
+	writer := bufio.NewWriter(conn)
+	reader := bufio.NewReader(conn)
+
 	messageChan := make(chan string)
 	cmdChan := make(chan string)
+	exitChan := make(chan bool, 1)
 
+	var exitFlag int32
+
+	// write loop
 	go func() {
-		writer := bufio.NewWriter(conn)
+		var err error
 		for {
 			select {
 			case msg := <-messageChan:
-				writer.WriteString(msg + string('\n'))
-			case cmd := <-messageChan:
+				_, err = writer.WriteString(msg + string('\n'))
+				if err != nil {
+					goto close
+				}
+				err = writer.Flush()
+				if err != nil {
+					goto close
+				}
+			case cmd := <-cmdChan:
 				if cmd == "exit" {
-					goto exit
+					goto close
 				}
 				fmt.Printf("unknown cmd: %s \n", cmd)
 			}
 		}
-	exit:
-		io.WriteString(conn, "client close\n")
-		conn.Close()
-	}()
-
-	go func() {
-		reader := bufio.NewReader(conn)
-		line, err := reader.ReadBytes('\n')
+	close:
 		if err != nil {
-			if err == io.EOF {
-				goto exit
-			}
-			fmt.Println("error occur: ", err.Error())
+			fmt.Printf("writer error : %s\n", err.Error())
 		}
-		fmt.Printf("client received: %s\n", line)
-	exit:
-		fmt.Printf("exiting")
+		if atomic.CompareAndSwapInt32(&exitFlag, 0, 1) {
+			close(exitChan)
+		}
 	}()
 
-	var cmd string
-	for {
-		fmt.Scanf("%s", &cmd)
-		if cmd == "exit" {
-			cmdChan <- cmd
-		} else {
-			messageChan <- cmd
+	// read loop
+	go func() {
+		for {
+			if atomic.LoadInt32(&exitFlag) == 0 {
+				line, err := reader.ReadSlice('\n')
+				if err != nil {
+					if err == io.EOF {
+						fmt.Printf("receive: %s\n", line)
+						goto close
+					}
+					fmt.Println("error occur: ", err.Error())
+				}
+				fmt.Printf("receive: %s\n", line)
+			}
 		}
-	}
+	close:
+		if atomic.CompareAndSwapInt32(&exitFlag, 0, 1) {
+			close(exitChan)
+		}
+	}()
+
+	// cmd loop
+	go func() {
+		var cmd string
+		for {
+			fmt.Print("> ")
+			fmt.Scanf("%s", &cmd)
+			fmt.Println('\n')
+			if cmd == "exit" {
+				cmdChan <- cmd
+			} else {
+				messageChan <- cmd
+			}
+		}
+	}()
+
+	<-exitChan
+	conn.Close()
+	fmt.Println("client close")
 }
